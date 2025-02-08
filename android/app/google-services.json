@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "759762188544",
+    "project_id": "zapcall-37e19",
+    "storage_bucket": "zapcall-37e19.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:759762188544:android:d90cf72a138d2e2caa9be5",
+        "android_client_info": {
+          "package_name": "dev.albinpk.zapcall"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClMX9r8CpiWz5K_90L2TTvdDaF303TacY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
