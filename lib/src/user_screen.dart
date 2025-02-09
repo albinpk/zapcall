@@ -89,6 +89,7 @@ class _UsersScreenState extends State<UsersScreen> {
                       leading: Icon(Icons.person),
                       title: Text('Albin'),
                       trailing: IconButton.filledTonal(
+                        tooltip: 'Start Video Call',
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
