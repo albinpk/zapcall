@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -186,7 +187,7 @@ class _CallScreenState extends State<CallScreen> {
                                 ),
                                 onPressed: _onTapMic,
                                 icon:
-                                    Icon(_isMuted ? Icons.mic_off : Icons.mic),
+                                    Icon(_isMicOn ? Icons.mic : Icons.mic_off),
                               ),
                               IconButton.filled(
                                 style: IconButton.styleFrom(
@@ -207,6 +208,14 @@ class _CallScreenState extends State<CallScreen> {
                                       : Icons.videocam_off,
                                 ),
                               ),
+                              if (!kIsWeb)
+                                IconButton.filledTonal(
+                                  style: IconButton.styleFrom(
+                                    padding: EdgeInsets.all(15),
+                                  ),
+                                  onPressed: _onSwitchCamera,
+                                  icon: Icon(Icons.switch_camera_outlined),
+                                ),
                             ],
                           ),
                         ),
@@ -219,29 +228,33 @@ class _CallScreenState extends State<CallScreen> {
     );
   }
 
-  bool _isMuted = false;
+  bool _isMicOn = true;
   void _onTapMic() {
     setState(() {
-      _localRenderer.muted = _isMuted = !_isMuted;
+      _isMicOn = !_isMicOn;
+      signaling.localStream?.getAudioTracks()[0].enabled = _isMicOn;
     });
   }
 
   bool _isVideoOn = true;
   void _onTapVideo() {
-    for (final t in _localRenderer.srcObject!.getVideoTracks()) {
-      t.enabled = !_isVideoOn;
-    }
     setState(() {
       _isVideoOn = !_isVideoOn;
+      signaling.localStream?.getVideoTracks()[0].enabled = _isVideoOn;
     });
+    // for (final t in _localRenderer.srcObject!.getVideoTracks()) {
+    //   t.enabled = !_isVideoOn;
+    // }
+  }
+
+  Future<void> _onSwitchCamera() async {
+    await Helper.switchCamera(signaling.localStream!.getVideoTracks()[0]);
   }
 
   Future<void> _onTapHang() async {
     try {
       if (_isVideoOn) _onTapVideo();
-      try {
-        if (!_isMuted) _onTapMic();
-      } catch (_) {}
+      if (_isMicOn) _onTapMic();
       await signaling.hangUp(_localRenderer, roomId);
       Navigator.of(context).pop();
     } catch (e) {
