@@ -1,0 +1,25 @@
+{
+  "name": "ZapCall - Fast & Secure Video Calling",
+  "short_name": "ZapCall",
+  "description": "ZapCall is a high-quality, fast, and secure video calling app built with Flutter and WebRTC. Connect instantly across devices with seamless performance.",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/?utm_source=web_app_manifest",
+  "scope": "/",
+  "categories": ["communication", "productivity", "utilities"],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
