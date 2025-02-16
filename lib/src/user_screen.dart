@@ -1,23 +1,31 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:zapcall/src/call_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zapcall/src/data/db.dart';
+import 'package:zapcall/src/data/models/room.dart';
+import 'package:zapcall/src/data/models/user.dart';
+import 'package:zapcall/src/providers/app_user_provider.dart';
+import 'package:zapcall/src/providers/users_provider.dart';
+import 'package:zapcall/src/providers/zap_user_provider.dart';
+import 'package:zapcall/src/router/routes.dart';
+import 'package:zapcall/src/shared/widget/account_button.dart';
 
-class UsersScreen extends StatefulWidget {
+class UsersScreen extends ConsumerStatefulWidget {
   const UsersScreen({super.key});
 
   @override
-  State<UsersScreen> createState() => _UsersScreenState();
+  ConsumerState<UsersScreen> createState() => _UsersScreenState();
 }
 
-class _UsersScreenState extends State<UsersScreen> {
+class _UsersScreenState extends ConsumerState<UsersScreen> {
   final db = FirebaseFirestore.instance;
 
   @override
   void initState() {
     super.initState();
-
     _startListerRooms();
   }
 
@@ -27,40 +35,36 @@ class _UsersScreenState extends State<UsersScreen> {
     super.dispose();
   }
 
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? sub;
-
-  // ignoring first event
-  bool _startListen = false;
+  StreamSubscription<QuerySnapshot<RoomModel>>? sub;
 
   void _startListerRooms() {
-    sub = db.collection('rooms').snapshots().listen((event) {
+    sub = Db.roomsRef
+        .where('info.toId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+        .snapshots()
+        // .skip(1)
+        .listen((event) async {
+      if (!mounted) return;
       for (final e in event.docChanges) {
-        if (!_startListen) {
-          _startListen = true;
-          return;
-        }
-
         if (e.type == DocumentChangeType.added) {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Call from ${e.doc.id}'),
-              duration: Duration(seconds: 200),
-              action: SnackBarAction(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                label: 'Answer',
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => CallScreen(
-                        roomId: e.doc.id,
-                      ),
-                    ),
-                  );
-                },
+          final user =
+              await ref.read(zapUserProvider(e.doc.data()!.info.fromId).future);
+          if (!mounted) return;
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text('Incoming call from ${user.name}'),
+                duration: const Duration(seconds: 200),
+                action: SnackBarAction(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  label: 'Answer',
+                  onPressed: () {
+                    CallRoute(roomId: e.doc.id).push<void>(context);
+                  },
+                ),
               ),
-            ),
-          );
+            );
         }
       }
     });
@@ -68,45 +72,44 @@ class _UsersScreenState extends State<UsersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appUser = ref.watch(appUserProvider).valueOrNull;
     return Scaffold(
-      body: Align(
-        alignment: Alignment(0, -0.5),
-        child: SizedBox(
-          width: 500,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppBar(
-                title: Text('ZapCall'),
-                centerTitle: true,
-              ),
-              Flexible(
-                child: ListView.builder(
-                  itemCount: 1,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      leading: Icon(Icons.person),
-                      title: Text('Albin'),
-                      trailing: IconButton.filledTonal(
-                        tooltip: 'Start Video Call',
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => CallScreen(roomId: null),
-                            ),
-                          );
-                        },
-                        icon: Icon(Icons.videocam_outlined),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+      appBar: AppBar(
+        title: const Text('Users'),
+        centerTitle: false,
+        actions: [if (appUser != null) const AccountButton()],
       ),
+      body: ref.watch(usersProvider).when(
+            error: (error, _) => Center(child: Text(error.toString())),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            data: (data) {
+              if (data.isEmpty) {
+                return const Center(
+                  child: Text('No users found'),
+                );
+              }
+
+              return ListView.builder(
+                itemCount: data.length,
+                itemBuilder: (context, index) {
+                  final user = data[index].data();
+                  return ListTile(
+                    leading: const Icon(Icons.person),
+                    title: Text(user.name),
+                    trailing: IconButton.filledTonal(
+                      tooltip: 'Video Call',
+                      onPressed: () => _onCall(user),
+                      icon: const Icon(Icons.videocam_outlined),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
     );
+  }
+
+  void _onCall(ZapUser user) {
+    CallRoute(userId: user.id).push<void>(context);
   }
 }

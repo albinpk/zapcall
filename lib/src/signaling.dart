@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:zapcall/src/logger.dart';
+import 'package:zapcall/src/types.dart';
 
 typedef StreamStateCallback = void Function(MediaStream stream);
 
@@ -14,10 +15,10 @@ class Signaling {
       {
         'urls': [
           'stun:stun1.l.google.com:19302',
-          'stun:stun2.l.google.com:19302'
-        ]
+          'stun:stun2.l.google.com:19302',
+        ],
       }
-    ]
+    ],
   };
 
   RTCPeerConnection? peerConnection;
@@ -29,9 +30,9 @@ class Signaling {
 
   final db = FirebaseFirestore.instance;
 
-  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? sub1;
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? sub2;
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? sub3;
+  StreamSubscription<DocumentSnapshot<Json>>? sub1;
+  StreamSubscription<QuerySnapshot<Json>>? sub2;
+  StreamSubscription<QuerySnapshot<Json>>? sub3;
 
   Future<String> createRoom() async {
     final roomRef = db.collection('rooms').doc();
@@ -52,11 +53,11 @@ class Signaling {
 
     peerConnection?.onIceCandidate = (RTCIceCandidate candidate) {
       l('Got candidate: ${candidate.toMap()}');
-      callerCandidatesCollection.add(candidate.toMap());
+      callerCandidatesCollection.add(candidate.toMap() as Json);
     };
 
     // Add code for creating a room
-    RTCSessionDescription offer = await peerConnection!.createOffer();
+    final offer = await peerConnection!.createOffer();
     await peerConnection!.setLocalDescription(offer);
     l('Created offer: $offer');
 
@@ -92,11 +93,11 @@ class Signaling {
       if (peerConnection?.getRemoteDescription() != null &&
           data['answer'] != null) {
         final answer = RTCSessionDescription(
-          data['answer']['sdp'],
-          data['answer']['type'],
+          data['answer']['sdp'] as String?,
+          data['answer']['type'] as String?,
         );
 
-        l("Someone tried to connect");
+        l('Someone tried to connect');
         await peerConnection?.setRemoteDescription(answer);
       }
     });
@@ -112,9 +113,9 @@ class Signaling {
           l('Got new remote ICE candidate: ${jsonEncode(data)}');
           peerConnection!.addCandidate(
             RTCIceCandidate(
-              data['candidate'],
-              data['sdpMid'],
-              data['sdpMLineIndex'],
+              data['candidate'] as String?,
+              data['sdpMid'] as String?,
+              data['sdpMLineIndex'] as int?,
             ),
           );
         }
@@ -149,7 +150,7 @@ class Signaling {
           return;
         }
         l('onIceCandidate: ${candidate.toMap()}');
-        calleeCandidatesCollection.add(candidate.toMap());
+        calleeCandidatesCollection.add(candidate.toMap() as Json);
       };
       // Code for collecting ICE candidate above
 
@@ -164,19 +165,22 @@ class Signaling {
       };
 
       // Code for creating SDP answer below
-      final data = roomSnapshot.data() as Map<String, dynamic>;
+      final data = roomSnapshot.data()!;
       l('Got offer $data');
       final offer = data['offer'];
       await peerConnection?.setRemoteDescription(
-        RTCSessionDescription(offer['sdp'], offer['type']),
+        RTCSessionDescription(
+          offer['sdp'] as String?,
+          offer['type'] as String?,
+        ),
       );
       final answer = await peerConnection!.createAnswer();
       l('Created Answer $answer');
 
       await peerConnection!.setLocalDescription(answer);
 
-      Map<String, dynamic> roomWithAnswer = {
-        'answer': {'type': answer.type, 'sdp': answer.sdp}
+      final roomWithAnswer = <String, dynamic>{
+        'answer': {'type': answer.type, 'sdp': answer.sdp},
       };
 
       await roomRef.update(roomWithAnswer);
@@ -187,14 +191,14 @@ class Signaling {
       sub3 =
           roomRef.collection('callerCandidates').snapshots().listen((snapshot) {
         for (final document in snapshot.docChanges) {
-          final data = document.doc.data() as Map<String, dynamic>;
+          final data = document.doc.data()!;
           l(data);
           l('Got new remote ICE candidate: $data');
           peerConnection!.addCandidate(
             RTCIceCandidate(
-              data['candidate'],
-              data['sdpMid'],
-              data['sdpMLineIndex'],
+              data['candidate'] as String?,
+              data['sdpMid'] as String?,
+              data['sdpMLineIndex'] as int?,
             ),
           );
         }
@@ -216,7 +220,7 @@ class Signaling {
   }
 
   Future<void> hangUp(RTCVideoRenderer localVideo, String? roomId) async {
-    List<MediaStreamTrack> tracks = localVideo.srcObject!.getTracks();
+    final tracks = localVideo.srcObject!.getTracks();
     for (final track in tracks) {
       track.stop();
     }
@@ -271,7 +275,7 @@ class Signaling {
     };
 
     peerConnection?.onAddStream = (MediaStream stream) {
-      l("Add remote stream");
+      l('Add remote stream');
       onAddRemoteStream?.call(stream);
       remoteStream = stream;
     };
