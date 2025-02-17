@@ -7,6 +7,7 @@ import 'package:zapcall/assets.dart';
 import 'package:zapcall/src/data/db.dart';
 import 'package:zapcall/src/data/models/user.dart';
 import 'package:zapcall/src/router/routes.dart';
+import 'package:zapcall/src/shared/widget/app_info_dialog.dart';
 
 class LoginScreen extends HookWidget {
   const LoginScreen({super.key});
@@ -96,6 +97,14 @@ class LoginScreen extends HookWidget {
               ),
             ),
           ),
+
+          Align(
+            alignment: Alignment.topRight,
+            child: IconButton(
+              onPressed: () => _showAboutDialog(context),
+              icon: const Icon(Icons.info_outline),
+            ),
+          ),
         ],
       ),
     );
@@ -120,5 +129,12 @@ class LoginScreen extends HookWidget {
     } catch (e) {
       log(e.toString());
     }
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => const AppInfoDialog(),
+    );
   }
 }
