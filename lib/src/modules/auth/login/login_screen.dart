@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:zapcall/assets.dart';
 import 'package:zapcall/src/data/db.dart';
 import 'package:zapcall/src/data/models/user.dart';
 import 'package:zapcall/src/router/routes.dart';
@@ -16,58 +17,86 @@ class LoginScreen extends HookWidget {
     final enableSave = useState(false);
     final isLoading = useState(false);
     return Scaffold(
-      body: Center(
-        child: SizedBox(
-          width: 500,
-          child: Card.outlined(
-            margin: const EdgeInsets.all(16),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Login',
-                    style: Theme.of(context).textTheme.headlineSmall,
+      body: Stack(
+        children: [
+          // background image
+          Positioned.fill(
+            child: Image.asset(
+              Assets.images.loginBgJPG,
+              fit: BoxFit.cover,
+            ),
+          ),
+
+          // login form
+          Center(
+            child: SizedBox(
+              width: 500,
+              child: Card(
+                color: Colors.white,
+                elevation: 5,
+                shadowColor: Colors.black26,
+                margin: const EdgeInsets.all(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Welcome to Zap!',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+
+                      Text(
+                        'Start your seamless video calls instantly.\n'
+                        'Just enter your name and join!',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                      const SizedBox(height: 30),
+
+                      // name input
+                      TextField(
+                        controller: nameController,
+                        onChanged: (value) {
+                          enableSave.value = value.trim().isNotEmpty;
+                        },
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(
+                          labelText: 'Your Name',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: enableSave.value
+                              ? () async {
+                                  isLoading.value = true;
+                                  enableSave.value = false;
+                                  await _onLogin(nameController.text.trim());
+                                  if (context.mounted) {
+                                    const UsersRoute().go(context);
+                                  }
+                                }
+                              : null,
+                          child: isLoading.value
+                              ? const SizedBox.square(
+                                  dimension: 20,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text('Login'),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: nameController,
-                    onChanged: (value) {
-                      enableSave.value = value.trim().isNotEmpty;
-                    },
-                    textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      labelText: 'Your Name',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: enableSave.value
-                          ? () async {
-                              isLoading.value = true;
-                              enableSave.value = false;
-                              await _onLogin(nameController.text.trim());
-                              if (context.mounted) {
-                                const UsersRoute().go(context);
-                              }
-                            }
-                          : null,
-                      child: isLoading.value
-                          ? const SizedBox.square(
-                              dimension: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Login'),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
