@@ -32,3 +32,21 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# FVM Version Cache
+.fvm/
+
+# Generated files
+*.g.dart
+*.freezed.dart
