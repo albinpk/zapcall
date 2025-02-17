@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zapcall/src/data/db.dart';
 import 'package:zapcall/src/providers/app_user_provider.dart';
 import 'package:zapcall/src/router/routes.dart';
+import 'package:zapcall/src/shared/widget/app_info_dialog.dart';
 
 class AccountButton extends ConsumerWidget {
   const AccountButton({super.key});
@@ -13,10 +14,27 @@ class AccountButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(appUserProvider).requireValue!;
-    return TextButton.icon(
-      onPressed: () => _onLogout(ref),
-      icon: const Icon(Icons.account_circle_rounded),
-      label: Text(user.name),
+    return Row(
+      children: [
+        IconButton(
+          tooltip: 'About',
+          onPressed: () {
+            showDialog<void>(
+              context: context,
+              builder: (context) {
+                return const AppInfoDialog();
+              },
+            );
+          },
+          iconSize: 20,
+          icon: const Icon(Icons.info_outline),
+        ),
+        TextButton.icon(
+          onPressed: () => _onLogout(ref),
+          icon: const Icon(Icons.account_circle_rounded),
+          label: Text(user.name),
+        ),
+      ],
     );
   }
 

@@ -100,9 +100,13 @@ class LoginScreen extends HookWidget {
 
           Align(
             alignment: Alignment.topRight,
-            child: IconButton(
-              onPressed: () => _showAboutDialog(context),
-              icon: const Icon(Icons.info_outline),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: IconButton(
+                tooltip: 'About',
+                onPressed: () => _showAboutDialog(context),
+                icon: const Icon(Icons.info_outline),
+              ),
             ),
           ),
         ],

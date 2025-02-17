@@ -54,6 +54,7 @@ class AppInfoDialog extends HookWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
+                    tooltip: 'GitHub Repository',
                     onPressed: () => launchUrl(Uri.parse(_repoLink)),
                     icon: SizedBox.square(
                       dimension: 30,
@@ -62,6 +63,7 @@ class AppInfoDialog extends HookWidget {
                   ),
                   const SizedBox(width: 10),
                   IconButton(
+                    tooltip: 'LinkedIn Profile',
                     onPressed: () => launchUrl(Uri.parse(_linkedLink)),
                     icon: SizedBox.square(
                       dimension: 30,
