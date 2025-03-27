@@ -5,7 +5,7 @@ part 'room.freezed.dart';
 part 'room.g.dart';
 
 @freezed
-class RoomModel with _$RoomModel {
+abstract class RoomModel with _$RoomModel {
   const factory RoomModel({
     // required String id,
     required RoomInfoModel info,
@@ -18,7 +18,7 @@ class RoomModel with _$RoomModel {
 }
 
 @freezed
-class RoomInfoModel with _$RoomInfoModel {
+abstract class RoomInfoModel with _$RoomInfoModel {
   const factory RoomInfoModel({
     // required String name,
     required String fromId,
