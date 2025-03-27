@@ -4,7 +4,7 @@ part 'user.freezed.dart';
 part 'user.g.dart';
 
 @freezed
-class ZapUser with _$ZapUser {
+abstract class ZapUser with _$ZapUser {
   const factory ZapUser({
     required String id,
     required String name,
